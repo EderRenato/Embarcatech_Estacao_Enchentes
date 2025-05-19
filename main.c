@@ -42,17 +42,18 @@ volatile sensors_data_t g_sensors_data;
 
 int is_rain(void)
 {
-    if (g_sensors_data.rain_volume < 10)
+    float rainVolume = (g_sensors_data.rain_volume/4095.0) * 80.0; // Simula de 0 a 80mm chuva/dia
+    if (rainVolume < 15)
     {
-        return 0;
-    } else if (g_sensors_data.rain_volume < 30)
+        return 0;  // Sem chuva
+    } else if (rainVolume < 30)
     {
-        return 1;
-    } else if (g_sensors_data.rain_volume < 60)
+        return 1;  // Chuva fraca
+    } else if (rainVolume < 55)
     {
-        return 3;
+        return 2;  // Chuva moderada
     } else {
-        return 4;
+        return 3;  // Chuva forte
     }
 }
 
@@ -212,20 +213,41 @@ void vLedMatrixTask(void *params)
     {
         npClear();
         
-        int rain_intensity = is_rain(); // Obter intensidade da chuva uma vez
+        // Obter intensidade da chuva
+        int rain_intensity = is_rain();
         
-        for(int linha = 0; linha < 5; linha++) {
-            for(int coluna = 0; coluna < 5; coluna++) {
-                int posicao = getIndex(linha, coluna);
-                npSetLED(posicao, 
-                        RAIN_VOLUME[rain_intensity][linha][coluna][0], 
-                        RAIN_VOLUME[rain_intensity][linha][coluna][1], 
-                        RAIN_VOLUME[rain_intensity][linha][coluna][2]);
+        // Debug - imprimir informações úteis
+        printf("Rain intensity: %d, Rain volume: %d\n", rain_intensity, g_sensors_data.rain_volume);
+        
+        // Certifique-se de que o valor está dentro da faixa válida
+        if (rain_intensity >= 0 && rain_intensity < 4) {
+            // Atualizar a matriz de LED
+            for(int linha = 0; linha < 5; linha++) {
+                for(int coluna = 0; coluna < 5; coluna++) {
+                    // Transformação para corrigir a rotação de 90° anti-horário
+                    // Aqui aplicamos a rotação nos índices usados para acessar o sprite,
+                    // em vez de modificar a função getIndex
+                    int sprite_linha = coluna;
+                    int sprite_coluna = 4 - linha;
+                    
+                    // Usar a função getIndex original
+                    int posicao = getIndex(linha, coluna);
+                    
+                    // Verificar se a posição calculada é válida
+                    if (posicao >= 0 && posicao < LED_COUNT) {
+                        npSetLED(posicao, 
+                                RAIN_VOLUME[rain_intensity][sprite_linha][sprite_coluna][0], 
+                                RAIN_VOLUME[rain_intensity][sprite_linha][sprite_coluna][1], 
+                                RAIN_VOLUME[rain_intensity][sprite_linha][sprite_coluna][2]);
+                    }
+                }
             }
         }
         
+        // Escrever para a matriz de LED
         npWrite();
-        vTaskDelay(pdMS_TO_TICKS(500)); // Aumentei o delay para 500ms
+        
+        vTaskDelay(pdMS_TO_TICKS(200));
     }
 }
 
@@ -237,12 +259,12 @@ int main()
     xQueueSensorsData = xQueueCreate(5, sizeof(sensors_data_t));
 
     // Criação das tasks
-    xTaskCreate(vDistributorTask, "Distributor Task", 256, NULL, 1, NULL);
-    xTaskCreate(vSensorsTask, "Joystick Task", 256, NULL, 1, NULL);
+    xTaskCreate(vDistributorTask, "Distributor Task", 256, NULL, 3, NULL);
+    xTaskCreate(vSensorsTask, "Joystick Task", 256, NULL, 3, NULL);
     xTaskCreate(vDisplayTask, "Display Task", 512, NULL, 1, NULL);
     xTaskCreate(vAlarmTask, "Alarm Task", 256, NULL, 1, NULL);
     xTaskCreate(vLedsTask, "LEDs Task", 256, NULL, 1, NULL);
-    xTaskCreate(vLedMatrixTask, "LED Matrix Task", 512, NULL, 1, NULL);
+    xTaskCreate(vLedMatrixTask, "LED Matrix Task", 512, NULL, 2, NULL);
     // Inicia o agendador
     vTaskStartScheduler();
     panic_unsupported();

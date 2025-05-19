@@ -8,13 +8,19 @@ static PIO np_pio;          // static para encapsulamento
 static uint sm;             // static para encapsulamento
 static uint data_pin;       // static para encapsulamento
 
-int getIndex(int x, int y) {
-    x = 4 - x; // Inverte as colunas (0 -> 4, 1 -> 3, etc.)
-    y = 4 - y; // Inverte as linhas (0 -> 4, 1 -> 3, etc.)
-    if (y % 2 == 0) {
-        return y * 5 + x;       // Linha par (esquerda para direita)
+int getIndex(int linha, int coluna) {
+    // Transformação para corrigir a rotação de 90° anti-horário
+    int nova_linha = coluna;
+    int nova_coluna = 4 - linha;  // Inverter a coordenada da linha
+    
+    // Reutilizando a lógica original para lidar com o padrão em zigue-zague
+    nova_linha = 4 - nova_linha;  // Inverter as linhas (0 -> 4, 1 -> 3, etc.)
+    nova_coluna = 4 - nova_coluna; // Inverter as colunas (0 -> 4, 1 -> 3, etc.)
+    
+    if (nova_linha % 2 == 0) {
+        return nova_linha * 5 + nova_coluna;       // Linha par (esquerda para direita)
     } else {
-        return y * 5 + (4 - x); // Linha ímpar (direita para esquerda)
+        return nova_linha * 5 + (4 - nova_coluna); // Linha ímpar (direita para esquerda)
     }
 }
 
