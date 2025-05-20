@@ -1,5 +1,7 @@
 # 🌧️ Sistema de Monitoramento de Enchentes Inteligente
 
+[![Google Drive](https://img.shields.io/badge/Demo-Google%20Drive-blue?logo=google-drive)](https://drive.google.com/file/d/1Ig7YopQZhN8giFcB48UmPztkmGFJf8g6/view?usp=drive_link)
+
 Um sistema embarcado baseado em **Raspberry Pi Pico** e **FreeRTOS** para monitoramento de **nível de água** e **volume de chuva**, com **alertas sonoros e visuais**, ideal para aplicações em reservatórios, rios e áreas de risco de alagamento.
 
 ---
